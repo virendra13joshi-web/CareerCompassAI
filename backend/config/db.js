@@ -7,6 +7,7 @@ if (process.env.DATABASE_URL) {
 } else {
   poolConfig = {
     host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'careercompass',
@@ -24,10 +25,10 @@ const initializeDatabase = async () => {
     // Create DB if not exists
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
       user: process.env.DB_USER || 'root',
       password: process.env.DB_PASSWORD || ''
     });
-    
     await connection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || 'careercompass'}\`;`);
     await connection.end();
 
@@ -61,7 +62,7 @@ const initializeDatabase = async () => {
     `;
 
     await pool.query(createStudentsTable);
-    
+
     // Add columns to existing students table if they don't exist
     const newStudentCols = [
       "ALTER TABLE students ADD COLUMN role ENUM('student', 'admin') DEFAULT 'student'",
@@ -74,7 +75,7 @@ const initializeDatabase = async () => {
     for (const sql of newStudentCols) {
       try { await pool.query(sql); } catch (e) { /* already exists */ }
     }
-    
+
     console.log('Students table ensured.');
 
     const createCompaniesTable = `
