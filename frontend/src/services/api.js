@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api', // adjust base URL accordingly
+  baseURL: 'https://careercompassai-pang.onrender.com/api', // adjust base URL accordingly
 });
 
 // Add a request interceptor to include the auth token
