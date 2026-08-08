@@ -89,14 +89,14 @@ const notifyAllStudents = async (type, title, message, sendEmail = true) => {
 const checkUpcomingDeadlines = async () => {
   try {
     const [companies] = await pool.execute(`
-      SELECT id, company_name, job_role, deadline
+      SELECT id, company_name, job_role, application_deadline
       FROM companies
-      WHERE deadline IS NOT NULL
-        AND deadline BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 3 DAY)
+      WHERE application_deadline IS NOT NULL
+        AND application_deadline BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 3 DAY)
     `);
 
     for (const company of companies) {
-      const deadline = new Date(company.deadline).toLocaleDateString('en-IN', {
+      const deadline = new Date(company.application_deadline).toLocaleDateString('en-IN', {
         day: 'numeric', month: 'long', year: 'numeric'
       });
 
