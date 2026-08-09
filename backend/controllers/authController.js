@@ -13,40 +13,31 @@ const generateToken = (id, role) => {
 
 exports.register = async (req, res) => {
   try {
-    const { full_name, email, password } = req.body;
+    const { username, password } = req.body;
 
-    // Check if user exists
-    const existingStudent = await Student.findByEmail(email);
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Username and password are required' });
+    }
+
+    // Check if username already taken
+    const existingStudent = await Student.findByUsername(username);
     if (existingStudent) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ message: 'Username already taken' });
     }
 
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Generate verification token
-    const verification_token = crypto.randomBytes(20).toString('hex');
-
-    // Create user
-    const studentId = await Student.create({
-      full_name,
-      email,
-      password: hashedPassword,
-      verification_token
+    // Create user — no email verification required, is_verified set to TRUE in model
+    await Student.create({
+      full_name: username,
+      username,
+      email: null,
+      password: hashedPassword
     });
 
-    // Send verification email
-    try {
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-      const verifyUrl = `${frontendUrl}/verify-email/${verification_token}`;
-      const message = `Please verify your email by clicking the link: \n\n ${verifyUrl}`;
-      await sendEmail(email, 'Email Verification - CareerCompass AI', message, `<p>Please verify your email by clicking the link: <br/><a href="${verifyUrl}">${verifyUrl}</a></p>`);
-      res.status(201).json({ message: 'Registration successful. Please check your email to verify your account.' });
-    } catch (emailError) {
-      console.error('Failed to send verification email:', emailError);
-      res.status(201).json({ message: `Registration successful, but failed to send verification email: ${emailError.message}` });
-    }
+    res.status(201).json({ message: 'Registration successful. You can now log in.' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -54,64 +45,25 @@ exports.register = async (req, res) => {
 };
 
 exports.verifyEmail = async (req, res) => {
-  try {
-    const { token } = req.params;
-    const student = await Student.findByVerificationToken(token);
-
-    if (!student) {
-      return res.status(400).json({ message: 'Invalid or expired verification token' });
-    }
-
-    await Student.verifyStudent(student.id);
-
-    res.json({ message: 'Email verified successfully. You can now login.' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
+  res.json({ message: 'Email verification is not required. You can log in directly.' });
 };
 
 exports.resendVerification = async (req, res) => {
-  try {
-    const { email } = req.body;
-    const student = await Student.findByEmail(email);
-
-    if (!student) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    if (student.is_verified) {
-      return res.status(400).json({ message: 'Email is already verified' });
-    }
-
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const verifyUrl = `${frontendUrl}/verify-email/${student.verification_token}`;
-    const message = `Please verify your email by clicking the link: \n\n ${verifyUrl}`;
-
-    try {
-      await sendEmail(email, 'Email Verification - CareerCompass AI', message, `<p>Please verify your email by clicking the link: <br/><a href="${verifyUrl}">${verifyUrl}</a></p>`);
-      res.json({ message: 'Verification email resent successfully' });
-    } catch (emailError) {
-      console.error('Failed to resend verification email:', emailError);
-      res.status(500).json({ message: `Failed to resend verification email: ${emailError.message}` });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
+  res.json({ message: 'Email verification is disabled. You can log in directly.' });
 };
 
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    const student = await Student.findByEmail(email);
-    if (!student) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Username and password are required' });
     }
 
-    if (!student.is_verified) {
-      return res.status(400).json({ message: 'Please verify your email before logging in' });
+    const student = await Student.findByUsername(username);
+
+    if (!student) {
+      return res.status(400).json({ message: 'Invalid credentials' });
     }
 
     if (!student.password) {
@@ -124,7 +76,7 @@ exports.login = async (req, res) => {
     }
 
     const token = generateToken(student.id, student.role);
-    res.json({ token, user: { id: student.id, full_name: student.full_name, email: student.email, role: student.role } });
+    res.json({ token, user: { id: student.id, full_name: student.full_name, username: student.username, email: student.email, role: student.role } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

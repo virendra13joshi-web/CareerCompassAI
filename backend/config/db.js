@@ -38,7 +38,8 @@ const initializeDatabase = async () => {
       CREATE TABLE IF NOT EXISTS students (
         id INT AUTO_INCREMENT PRIMARY KEY,
         full_name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) NOT NULL UNIQUE,
+        username VARCHAR(100) UNIQUE,
+        email VARCHAR(255) NULL UNIQUE,
         password VARCHAR(255),
         phone_number VARCHAR(20),
         college VARCHAR(255),
@@ -50,7 +51,7 @@ const initializeDatabase = async () => {
         github VARCHAR(255),
         resume_url VARCHAR(255),
         profile_picture_url VARCHAR(255),
-        is_verified BOOLEAN DEFAULT FALSE,
+        is_verified BOOLEAN DEFAULT TRUE,
         verification_token VARCHAR(255),
         reset_password_token VARCHAR(255),
         reset_password_expires DATETIME,
@@ -70,10 +71,13 @@ const initializeDatabase = async () => {
       "ALTER TABLE students ADD COLUMN is_verified BOOLEAN DEFAULT FALSE",
       "ALTER TABLE students ADD COLUMN verification_token VARCHAR(255)",
       "ALTER TABLE students ADD COLUMN reset_password_token VARCHAR(255)",
-      "ALTER TABLE students ADD COLUMN reset_password_expires DATETIME"
+      "ALTER TABLE students ADD COLUMN reset_password_expires DATETIME",
+      // New: username support + email made optional
+      "ALTER TABLE students ADD COLUMN username VARCHAR(100) UNIQUE",
+      "ALTER TABLE students MODIFY COLUMN email VARCHAR(255) NULL"
     ];
     for (const sql of newStudentCols) {
-      try { await pool.query(sql); } catch (e) { /* already exists */ }
+      try { await pool.query(sql); } catch (e) { /* already exists or already nullable */ }
     }
 
     console.log('Students table ensured.');
@@ -82,20 +86,24 @@ const initializeDatabase = async () => {
       CREATE TABLE IF NOT EXISTS companies (
         id INT AUTO_INCREMENT PRIMARY KEY,
         company_name VARCHAR(255) NOT NULL,
-        logo_url VARCHAR(255),
+        company_logo VARCHAR(500),
         job_role VARCHAR(255) NOT NULL,
-        package VARCHAR(100),
+        package_lpa DECIMAL(5,2),
         location VARCHAR(255),
-        min_cgpa DECIMAL(4,2),
+        eligibility_cgpa DECIMAL(3,2),
         allowed_branches JSON,
         required_skills JSON,
         hiring_process TEXT,
-        interview_rounds INT,
+        interview_rounds TEXT,
         previous_questions TEXT,
         application_deadline DATETIME,
-        official_website VARCHAR(255),
+        company_website VARCHAR(255),
         max_backlogs INT DEFAULT 0,
         allowed_graduation_years JSON,
+        work_mode VARCHAR(50),
+        bond_period VARCHAR(100),
+        minimum_10th_percentage DECIMAL(5,2),
+        minimum_12th_percentage DECIMAL(5,2),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )
@@ -104,8 +112,17 @@ const initializeDatabase = async () => {
 
     // Add new columns to existing companies table if not present
     const newCompanyCols = [
+      "ALTER TABLE companies ADD COLUMN application_deadline DATETIME",
       "ALTER TABLE companies ADD COLUMN max_backlogs INT DEFAULT 0",
-      "ALTER TABLE companies ADD COLUMN allowed_graduation_years JSON"
+      "ALTER TABLE companies ADD COLUMN allowed_graduation_years JSON",
+      "ALTER TABLE companies ADD COLUMN company_logo VARCHAR(500)",
+      "ALTER TABLE companies ADD COLUMN package_lpa DECIMAL(5,2)",
+      "ALTER TABLE companies ADD COLUMN eligibility_cgpa DECIMAL(3,2)",
+      "ALTER TABLE companies ADD COLUMN company_website VARCHAR(255)",
+      "ALTER TABLE companies ADD COLUMN work_mode VARCHAR(50)",
+      "ALTER TABLE companies ADD COLUMN bond_period VARCHAR(100)",
+      "ALTER TABLE companies ADD COLUMN minimum_10th_percentage DECIMAL(5,2)",
+      "ALTER TABLE companies ADD COLUMN minimum_12th_percentage DECIMAL(5,2)"
     ];
     for (const sql of newCompanyCols) {
       try { await pool.query(sql); } catch (e) { /* already exists */ }

@@ -2,24 +2,34 @@ const { pool } = require('../config/db');
 
 const Student = {
   create: async (studentData) => {
-    const { full_name, email, password, google_id, verification_token } = studentData;
+    const { full_name, username, email, password, google_id, verification_token } = studentData;
     // Check if it's the first user
     const [countResult] = await pool.execute('SELECT COUNT(*) as count FROM students');
     const role = countResult[0].count === 0 ? 'admin' : 'student';
 
+    // For Google users without a username, auto-generate one from email
+    const resolvedUsername = username || (email ? email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_') : null);
+
     const query = `
-      INSERT INTO students (full_name, email, password, google_id, verification_token, role)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO students (full_name, username, email, password, google_id, verification_token, is_verified, role)
+      VALUES (?, ?, ?, ?, ?, ?, TRUE, ?)
     `;
     const [result] = await pool.execute(query, [
-      full_name, 
-      email, 
-      password || null, 
-      google_id || null, 
+      full_name || resolvedUsername || 'User',
+      resolvedUsername || null,
+      email || null,
+      password || null,
+      google_id || null,
       verification_token || null,
       role
     ]);
     return result.insertId;
+  },
+
+  findByUsername: async (username) => {
+    const query = `SELECT * FROM students WHERE username = ?`;
+    const [rows] = await pool.execute(query, [username]);
+    return rows[0];
   },
 
   findByEmail: async (email) => {

@@ -14,14 +14,17 @@ const validate = (req, res, next) => {
 };
 
 const registerValidation = [
-  body('full_name').notEmpty().withMessage('Full name is required').trim().escape(),
-  body('email').isEmail().withMessage('Invalid email address').normalizeEmail(),
+  body('username')
+    .notEmpty().withMessage('Username is required')
+    .trim()
+    .isLength({ min: 3, max: 30 }).withMessage('Username must be 3–30 characters')
+    .matches(/^[a-zA-Z0-9_]+$/).withMessage('Username may only contain letters, numbers, and underscores'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
   validate
 ];
 
 const loginValidation = [
-  body('email').isEmail().withMessage('Invalid email address').normalizeEmail(),
+  body('username').notEmpty().withMessage('Username is required').trim(),
   body('password').notEmpty().withMessage('Password is required'),
   validate
 ];

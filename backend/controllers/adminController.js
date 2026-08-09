@@ -407,7 +407,7 @@ exports.createAdminCompany = async (req, res) => {
   try {
     const companyData = { ...req.body };
     if (req.files && req.files.logo) {
-      companyData.logo_url = `/uploads/${req.files.logo[0].filename}`;
+      companyData.company_logo = `/uploads/${req.files.logo[0].filename}`;
     }
     if (typeof companyData.allowed_branches === 'string') {
       try { companyData.allowed_branches = JSON.parse(companyData.allowed_branches); } catch (e) { companyData.allowed_branches = []; }
@@ -419,7 +419,7 @@ exports.createAdminCompany = async (req, res) => {
     notifyAllStudents(
       'new_company',
       `🏢 New Company: ${companyData.company_name}`,
-      `${companyData.company_name} is hiring for ${companyData.job_role || 'multiple roles'}. Package: ${companyData.package || 'Competitive'}. Check eligibility now!`
+      `${companyData.company_name} is hiring for ${companyData.job_role || 'multiple roles'}. Package: ${companyData.package_lpa || 'Competitive'}. Check eligibility now!`
     );
     res.status(201).json({ message: 'Company created successfully', id });
   } catch (err) {
@@ -432,7 +432,7 @@ exports.updateAdminCompany = async (req, res) => {
   try {
     const companyData = { ...req.body };
     if (req.files && req.files.logo) {
-      companyData.logo_url = `/uploads/${req.files.logo[0].filename}`;
+      companyData.company_logo = `/uploads/${req.files.logo[0].filename}`;
     }
     if (typeof companyData.allowed_branches === 'string') {
       try { companyData.allowed_branches = JSON.parse(companyData.allowed_branches); } catch (e) { companyData.allowed_branches = []; }

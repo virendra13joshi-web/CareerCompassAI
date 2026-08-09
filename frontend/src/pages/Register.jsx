@@ -5,8 +5,7 @@ import api from '../services/api';
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    full_name: '',
-    email: '',
+    username: '',
     password: '',
     confirm_password: ''
   });
@@ -15,10 +14,6 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isRegistered, setIsRegistered] = useState(false);
-  const [registeredEmail, setRegisteredEmail] = useState('');
-  const [resendLoading, setResendLoading] = useState(false);
-  const [resendMessage, setResendMessage] = useState('');
 
   const navigate = useNavigate();
 
@@ -38,27 +33,14 @@ const Register = () => {
       return;
     }
 
-    const emailDomain = formData.email.split('@')[1]?.toLowerCase() || '';
-    if (emailDomain.includes('.edu') || emailDomain.includes('.ac.') || emailDomain.includes('college') || emailDomain.includes('university')) {
-      setError("Please use your personal email address (Gmail, Outlook, Yahoo, iCloud, or Hotmail). College email addresses are not allowed.");
-      setLoading(false);
-      return;
-    }
-
     try {
-      const res = await api.post('/auth/register', {
-        full_name: formData.full_name,
-        email: formData.email,
+      await api.post('/auth/register', {
+        username: formData.username,
         password: formData.password
       });
-      
-      // If the backend returns a successful registration but failed to send email
-      if (res.data.message && res.data.message.toLowerCase().includes('failed to send')) {
-        setError(res.data.message);
-      } else {
-        setIsRegistered(true);
-        setRegisteredEmail(formData.email);
-      }
+
+      setSuccess('Registration successful! Redirecting to login...');
+      setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
       const data = err.response?.data;
       if (data?.errors && data.errors.length > 0) {
@@ -73,86 +55,9 @@ const Register = () => {
     }
   };
 
-  const handleResend = async () => {
-    setResendLoading(true);
-    setResendMessage('');
-    setError('');
-    try {
-      const res = await api.post('/auth/resend-verification', { email: registeredEmail });
-      setResendMessage(res.data.message || 'Verification email resent successfully.');
-    } catch (err) {
-      const data = err.response?.data;
-      if (data?.errors && data.errors.length > 0) {
-        setError(data.errors.map(e => e.message || e.msg).join(', '));
-      } else if (data?.message && data.message !== 'Validation failed') {
-        setError(data.message);
-      } else {
-        setError('Failed to resend verification email.');
-      }
-    } finally {
-      setResendLoading(false);
-    }
-  };
-
-  if (isRegistered) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] py-12 px-4 sm:px-6 lg:px-8">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md w-full space-y-8 backdrop-blur-xl bg-white/60 p-10 rounded-2xl shadow-xl border border-white/40 text-center"
-        >
-          <h2 className="mt-2 text-3xl font-extrabold text-gray-900">
-            🎉 Registration Successful!
-          </h2>
-          
-          <div className="text-gray-700 text-base space-y-4 text-left bg-white/50 p-6 rounded-lg whitespace-pre-wrap">
-            <p>A verification email has been sent to your email address.</p>
-            <p>Please check:<br/>• Inbox<br/>• Spam Folder<br/>• Promotions</p>
-            <p>After verifying your email, you can login.</p>
-            
-            <div className="mt-6 p-4 bg-indigo-50 rounded text-center">
-              Verification email sent to:<br/>
-              <strong>{registeredEmail}</strong>
-            </div>
-          </div>
-
-          {error && (
-            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md text-left text-sm">
-              <p className="font-semibold text-red-800 mb-1">Email sending failed:</p>
-              {error}
-            </div>
-          )}
-          {resendMessage && (
-            <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md text-left text-sm">
-              {resendMessage}
-            </div>
-          )}
-
-          <div className="space-y-4 pt-4">
-            <button
-              onClick={handleResend}
-              disabled={resendLoading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-primary bg-indigo-50 hover:bg-indigo-100 focus:outline-none transition-all shadow-sm"
-            >
-              {resendLoading ? 'Sending...' : 'Resend Verification Email'}
-            </button>
-            
-            <Link
-              to="/login"
-              className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all shadow-md"
-            >
-              Go to Login
-            </Link>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] py-12 px-4 sm:px-6 lg:px-8">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-md w-full space-y-8 backdrop-blur-xl bg-white/60 p-10 rounded-2xl shadow-xl border border-white/40"
@@ -165,7 +70,7 @@ const Register = () => {
             Join CareerCompass AI today
           </p>
         </div>
-        
+
         {error && (
           <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md">
             <p className="text-sm">{error}</p>
@@ -180,38 +85,22 @@ const Register = () => {
 
         <form className="mt-8 space-y-6" onSubmit={handleRegister}>
           <div className="rounded-md shadow-sm -space-y-px">
+            {/* Username */}
             <div>
-              <label htmlFor="full_name" className="sr-only">Full Name</label>
+              <label htmlFor="username" className="sr-only">Username</label>
               <input
-                id="full_name"
-                name="full_name"
+                id="username"
+                name="username"
                 type="text"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-lg focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm bg-white/50"
-                placeholder="Full Name"
-                value={formData.full_name}
+                placeholder="Username (letters, numbers, underscores)"
+                value={formData.username}
                 onChange={handleChange}
               />
             </div>
-            <div>
-              <label htmlFor="email-address" className="sr-only">Email address</label>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm bg-white/50"
-                placeholder="Email address"
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="relative block w-full px-3 py-2 border border-gray-300 bg-blue-50/50 text-xs text-left z-0 text-gray-600 flex items-start">
-              <svg className="w-4 h-4 flex-shrink-0 text-blue-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-              <span>Use your personal email address (e.g. Gmail, Outlook, Yahoo, iCloud, or Hotmail). College or institutional email addresses are not accepted.</span>
-            </div>
+
+            {/* Password */}
             <div className="relative">
               <label htmlFor="password" className="sr-only">Password</label>
               <input
@@ -241,6 +130,8 @@ const Register = () => {
                 )}
               </button>
             </div>
+
+            {/* Password strength hints */}
             <div className="relative block w-full px-3 py-3 border border-gray-300 bg-white/60 text-xs text-left z-0 space-y-1">
               <p className="font-semibold text-gray-700 mb-2">Password must contain:</p>
               <div className={`flex items-center ${formData.password.length >= 8 ? 'text-green-600' : 'text-red-500'}`}>
@@ -259,6 +150,8 @@ const Register = () => {
                 <span className="mr-2 text-sm font-bold">{/[^A-Za-z0-9]/.test(formData.password) ? '✓' : '✗'}</span> One special character
               </div>
             </div>
+
+            {/* Confirm Password */}
             <div className="relative">
               <label htmlFor="confirm_password" className="sr-only">Confirm Password</label>
               <input
