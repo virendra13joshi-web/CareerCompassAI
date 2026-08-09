@@ -1,38 +1,28 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require("resend");
 
-const { EMAIL_USER, EMAIL_PASS } = process.env;
-
-if (!EMAIL_USER || !EMAIL_PASS) {
-  console.error(
-    'ERROR: EMAIL_USER or EMAIL_PASS environment variables are missing. Email sending will fail.'
-  );
-}
-
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  family: 4,
-  auth: {
-    user: EMAIL_USER,
-    pass: EMAIL_PASS,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendEmail = async (to, subject, text, html) => {
   try {
-    const info = await transporter.sendMail({
-      from: `"CareerCompass AI" <${EMAIL_USER}>`,
-      to,
+    const { data, error } = await resend.emails.send({
+      from: "CareerCompass AI <onboarding@resend.dev>",
+      to: [to],
       subject,
       text,
       html,
     });
 
+    if (error) {
+      console.error("Resend email error:", error);
+      throw new Error(error.message || "Failed to send email");
+    }
+
     console.log(`Email sent successfully to: ${to}`);
-    return info;
+    console.log(`Resend Email ID: ${data?.id}`);
+
+    return data;
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error("Error sending email:", error);
     throw error;
   }
 };
