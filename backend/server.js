@@ -60,6 +60,7 @@ const allowedOrigins = [
   "http://localhost:5175",
   "https://careercompassai-frontend.onrender.com",
   "https://career-compass-hhl975x30-virendra13joshi-webs-projects.vercel.app",
+  "https://career-compass-r3qemuhg3-virendra13joshi-webs-projects.vercel.app",
 ];
 
 // Also allow origins provided through Render environment variable
@@ -85,7 +86,7 @@ app.use(
         return callback(null, true);
       }
 
-      if (allowedOrigins.includes(origin)) {
+      if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
         return callback(null, true);
       }
 
