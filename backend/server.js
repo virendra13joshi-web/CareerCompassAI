@@ -59,6 +59,7 @@ const allowedOrigins = [
   "http://localhost:5174",
   "http://localhost:5175",
   "https://careercompassai-frontend.onrender.com",
+  "https://career-compass-hhl975x30-virendra13joshi-webs-projects.vercel.app",
 ];
 
 // Also allow origins provided through Render environment variable
