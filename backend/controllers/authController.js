@@ -38,7 +38,8 @@ exports.register = async (req, res) => {
 
     // Send verification email
     try {
-      const verifyUrl = `http://localhost:5173/verify-email/${verification_token}`;
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const verifyUrl = `${frontendUrl}/verify-email/${verification_token}`;
       const message = `Please verify your email by clicking the link: \n\n ${verifyUrl}`;
       await sendEmail(email, 'Email Verification - CareerCompass AI', message, `<p>Please verify your email by clicking the link: <br/><a href="${verifyUrl}">${verifyUrl}</a></p>`);
       res.status(201).json({ message: 'Registration successful. Please check your email to verify your account.' });
@@ -83,7 +84,8 @@ exports.resendVerification = async (req, res) => {
       return res.status(400).json({ message: 'Email is already verified' });
     }
 
-    const verifyUrl = `http://localhost:5173/verify-email/${student.verification_token}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const verifyUrl = `${frontendUrl}/verify-email/${student.verification_token}`;
     const message = `Please verify your email by clicking the link: \n\n ${verifyUrl}`;
 
     try {
@@ -187,8 +189,9 @@ exports.forgotPassword = async (req, res) => {
 
     await Student.saveResetToken(student.id, resetToken, resetExpire);
 
-    const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
-    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. \n\n Please make a PUT request to: \n\n ${resetUrl}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
+    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. \n\n Please click the link below to reset your password: \n\n ${resetUrl}`;
 
     await sendEmail(email, 'Password Reset Token', message, `<p>Reset link: <a href="${resetUrl}">${resetUrl}</a></p>`);
 
